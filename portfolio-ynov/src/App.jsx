@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import emailjs from '@emailjs/browser'
 import { Moon, Sun, Menu, X, ChevronDown, Code, Coffee, Heart, Mail, MapPin, Send, Github, Linkedin, Database, Globe, Server, Zap, Star, Award, Users, Download } from 'lucide-react'
 import profilePhoto from './assets/IMG_20250728_143718.jpg'
+import { translations } from './translations'
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -10,6 +11,57 @@ function App() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' })
+  const [language, setLanguage] = useState('fr')
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false)
+
+  // Récupérer la langue depuis localStorage au chargement
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language') || 'fr'
+    setLanguage(savedLanguage)
+    
+    // Scroll vers le haut au chargement
+    window.scrollTo(0, 0)
+    
+    // Forcer le scroll vers le haut après un court délai
+    setTimeout(() => {
+      window.scrollTo(0, 0)
+    }, 100)
+  }, [])
+
+  // Sauvegarder la langue dans localStorage
+  useEffect(() => {
+    localStorage.setItem('language', language)
+  }, [language])
+
+  // Forcer le scroll vers le haut au chargement de la page
+  useEffect(() => {
+    // Scroll immédiat
+    window.scrollTo(0, 0)
+    
+    // Scroll après le rendu
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0)
+    }, 50)
+    
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Fermer le menu de langue quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (languageMenuOpen && !event.target.closest('.language-dropdown')) {
+        setLanguageMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [languageMenuOpen])
+
+  // Obtenir les traductions pour la langue actuelle
+  const t = translations[language]
 
   useEffect(() => {
     // Forcer le mode sombre par défaut
@@ -28,6 +80,15 @@ function App() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
+  }
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'fr' ? 'en' : 'fr')
+  }
+
+  const changeLanguage = (newLanguage) => {
+    setLanguage(newLanguage)
+    setLanguageMenuOpen(false)
   }
 
   const toggleMobileMenu = () => {
@@ -91,7 +152,7 @@ function App() {
       if (result.status === 200) {
         setNotification({
           show: true,
-          message: 'Message envoyé avec succès ! 🎉',
+          message: t.successMessage,
           type: 'success'
         })
         setFormData({ name: '', email: '', message: '' })
@@ -135,16 +196,16 @@ function App() {
   ]
 
   const stats = [
-    { icon: <Code className="w-6 h-6" />, number: "12", label: "Projets réalisés" },
-    { icon: <Users className="w-6 h-6" />, number: "2", label: "Années d'études" },
-    { icon: <Award className="w-6 h-6" />, number: "3ème", label: "Année en cours" },
-    { icon: <Star className="w-6 h-6" />, number: "Cybersécurité", label: "Spécialisation" }
+    { icon: <Code className="w-6 h-6" />, number: "12", label: t.projectsCompleted },
+    { icon: <Users className="w-6 h-6" />, number: "2", label: t.yearsOfStudy },
+    { icon: <Award className="w-6 h-6" />, number: "3ème", label: t.currentYear },
+    { icon: <Star className="w-6 h-6" />, number: "Cybersécurité", label: t.specialization }
   ]
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
       darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
-    }`} style={{ paddingTop: '80px' }}>
+    }`} style={{ scrollBehavior: 'auto' }}>
       
       {/* Avatar flottant en haut à gauche */}
       <motion.div
@@ -375,7 +436,7 @@ function App() {
               whileTap={{ scale: 0.98 }}
             >
               <motion.span 
-                className="text-5xl font-bold gradient-text transition-all duration-300 relative"
+                className="text-5xl font-bold gradient-text transition-all duration-300 relative font-heading"
                 style={{
                   textShadow: '0 0 0 rgba(59, 130, 246, 0)',
                   transition: 'all 0.3s ease-out'
@@ -394,9 +455,9 @@ function App() {
                   whileHover={{ y: -1 }}
                   className="nav-link text-base font-medium capitalize relative group px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300"
                 >
-                  {section === 'home' ? 'Accueil' : 
-                   section === 'about' ? 'À propos' :
-                   section === 'skills' ? 'Compétences' : 'Contact'}
+                  {section === 'home' ? t.home : 
+                   section === 'about' ? t.about :
+                   section === 'skills' ? t.skills : t.contact}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
                 </motion.a>
               ))}
@@ -406,7 +467,7 @@ function App() {
             <div className="header-icons-container flex items-center justify-center space-x-4" style={{ height: '80px', display: 'flex', alignItems: 'center' }}>
               {/* CV Download button */}
               <motion.a
-                href="/cv-mathias-neri.pdf"
+                href="cv-mathias-neri.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.05 }}
@@ -414,15 +475,75 @@ function App() {
                 className="hidden md:flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-base font-medium shadow-lg hover:shadow-xl"
               >
                 <Download className="w-5 h-5" />
-                <span>CV</span>
+                <span>{t.cv}</span>
               </motion.a>
+
+              {/* Language dropdown */}
+              <div className="relative language-dropdown">
+                <motion.button
+                  onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
+                  className="hamburger-icon flex items-center justify-center relative"
+                  style={{ alignSelf: 'center', margin: 'auto 0', position: 'relative', top: '0', transform: 'none' }}
+                  aria-label={t.languageToggle}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {/* Langue actuelle avec icône de sélecteur */}
+                  <div className="flex items-center space-x-1">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${
+                      language === 'fr' ? 'bg-blue-600' : 'bg-red-600'
+                    }`}>
+                      {language === 'fr' ? 'FR' : 'EN'}
+                    </div>
+                    <ChevronDown className="w-3 h-3 text-gray-400" />
+                  </div>
+                </motion.button>
+
+                {/* Menu déroulant avec lettres */}
+                <AnimatePresence>
+                  {languageMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 p-2 bg-gray-800 dark:bg-gray-900 rounded-xl shadow-xl z-50"
+                      style={{ right: 'auto', left: '0px' }}
+                    >
+                      {/* Option Français */}
+                      <motion.button
+                        onClick={() => changeLanguage('fr')}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm mb-2 transition-all duration-200 ${
+                          language === 'fr' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        FR
+                      </motion.button>
+
+                      {/* Option Anglais */}
+                      <motion.button
+                        onClick={() => changeLanguage('en')}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-200 ${
+                          language === 'en' ? 'bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        EN
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Dark mode toggle */}
               <motion.button
                 onClick={toggleDarkMode}
                 className="hamburger-icon flex items-center justify-center"
                 style={{ alignSelf: 'center', margin: 'auto 0', position: 'relative', top: '0', transform: 'none' }}
-                aria-label="Toggle dark mode"
+                aria-label={t.darkModeToggle}
               >
                 <AnimatePresence mode="wait">
                   {darkMode ? (
@@ -504,28 +625,28 @@ function App() {
                   className="mobile-menu-item"
                   onClick={() => { scrollToSection('about'); setMobileMenuOpen(false); }}
                 >
-                  À propos
+                  {t.about}
                 </div>
                 <div 
                   className="mobile-menu-item"
                   onClick={() => { scrollToSection('skills'); setMobileMenuOpen(false); }}
                 >
-                  Compétences
+                  {t.skills}
                 </div>
                 <div 
                   className="mobile-menu-item"
                   onClick={() => { scrollToSection('contact'); setMobileMenuOpen(false); }}
                 >
-                  Contact
+                  {t.contact}
                 </div>
                 <div 
                   className="mobile-menu-item"
                   onClick={() => { 
-                    window.open('/cv-mathias-neri.pdf', '_blank');
+                    window.open('cv-mathias-neri.pdf', '_blank');
                     setMobileMenuOpen(false);
                   }}
                 >
-                  CV
+                  {t.cv}
                 </div>
               </div>
             </motion.div>
@@ -590,7 +711,7 @@ function App() {
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
                     fontWeight: '500'
-                  }}>Disponible pour de nouveaux projets</span>
+                  }}>{t.availableForProjects}</span>
                 </motion.div>
 
               {/* Main title */}
@@ -599,7 +720,7 @@ function App() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
-                  className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight"
+                  className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight font-display"
                 >
                   <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
                     Mathias
@@ -616,7 +737,7 @@ function App() {
                   transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
                   className="text-2xl md:text-3xl text-gray-300 dark:text-gray-200 max-w-4xl mx-auto leading-relaxed font-light"
                 >
-                  Passionné par la <span className="text-blue-600 dark:text-blue-400 font-semibold">cybersécurité</span> et le <span className="text-purple-600 dark:text-purple-400 font-semibold">développement</span>
+                  {t.heroSubtitleText}
                 </motion.p>
               </div>
 
@@ -802,7 +923,7 @@ function App() {
                   >
                                                                 <div className="flex items-center justify-center space-x-2 w-full" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none' }}>
                         <Mail className="w-5 h-5" />
-                        <div style={{ whiteSpace: 'nowrap', textDecoration: 'none !important', userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none' }}>Me contacter</div>
+                        <div style={{ whiteSpace: 'nowrap', textDecoration: 'none !important', userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none' }}>{t.heroButton}</div>
                       </div>
                   </motion.button>
                 
@@ -878,7 +999,7 @@ function App() {
                  >
                                                             <div className="flex items-center justify-center space-x-2 w-full" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none' }}>
                         <Code className="w-6 h-6" />
-                        <div style={{ whiteSpace: 'nowrap', textDecoration: 'none !important', userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none' }}>Voir mes compétences</div>
+                        <div style={{ whiteSpace: 'nowrap', textDecoration: 'none !important', userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none' }}>{t.seeSkills}</div>
                       </div>
                   </motion.a>
                 </motion.div>
@@ -913,11 +1034,15 @@ function App() {
               viewport={{ once: true }}
               className="text-center mb-16 section-header"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                À propos de <span className="gradient-text">moi</span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-heading">
+                {t.aboutTitle.split(' ').map((word, index) => (
+                  <span key={index} className={index === 2 ? 'gradient-text' : ''}>
+                    {word}{index < t.aboutTitle.split(' ').length - 1 ? ' ' : ''}
+                  </span>
+                ))}
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Passionné par le développement et les nouvelles technologies
+                {t.aboutDescription}
               </p>
             </motion.div>
 
@@ -935,28 +1060,24 @@ function App() {
                     className="space-y-6"
                   >
                     <div className="space-y-4">
-                      <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                        Mon parcours à Ynov
+                      <h3 className="text-2xl font-semibold text-gray-900 dark:text-white font-heading">
+                        {t.myJourney}
                       </h3>
                       <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                        Étudiant en 2ème année d'informatique à Ynov Campus Aix, je me passionne 
-                        pour la cybersécurité et le développement. Mon parcours m'a permis d'acquérir 
-                        une solide base technique tout en développant ma curiosité et ma rigueur.
+                        {t.journeyText1}
                       </p>
                       <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                        Curieux de nature, j'aime explorer de nouvelles technologies et approches 
-                        pour créer des solutions sécurisées. En septembre, je vais entamer ma 3ème année 
-                        en me spécialisant en cybersécurité, un domaine qui me passionne particulièrement.
+                        {t.journeyText2}
                       </p>
                     </div>
 
                     {/* Education info grid */}
                     <div className="grid grid-cols-2 gap-4 pt-6">
                       {[
-                        { icon: <Code className="w-6 h-6" />, title: "2ème année", desc: "Informatique à Ynov Campus Aix" },
-                        { icon: <MapPin className="w-6 h-6" />, title: "Localisation", desc: "Aix-en-Provence, France" },
-                        { icon: <Mail className="w-6 h-6" />, title: "Formation", desc: "2023 - 2026 (en cours)" },
-                        { icon: <Database className="w-6 h-6" />, title: "Spécialisation", desc: "Cybersécurité (3ème année)" }
+                        { icon: <Code className="w-6 h-6" />, title: t.secondYear, desc: t.secondYearDesc },
+                        { icon: <MapPin className="w-6 h-6" />, title: t.location, desc: t.locationDesc },
+                        { icon: <Mail className="w-6 h-6" />, title: t.formation, desc: t.formationDesc },
+                        { icon: <Database className="w-6 h-6" />, title: t.specialization, desc: t.specializationDesc }
                       ].map((info, index) => (
                         <motion.div
                           key={index}
@@ -980,6 +1101,27 @@ function App() {
                         </motion.div>
                       ))}
                     </div>
+
+                    {/* Bouton CV */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                      viewport={{ once: true }}
+                      className="pt-6"
+                    >
+                      <motion.a
+                        href="cv-mathias-neri.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-base font-medium shadow-lg hover:shadow-xl"
+                      >
+                        <Download className="w-5 h-5" />
+                        <span>{t.cv}</span>
+                      </motion.a>
+                    </motion.div>
                   </motion.div>
 
 
@@ -1001,11 +1143,15 @@ function App() {
               viewport={{ once: true }}
               className="text-center mb-16 section-header"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Mes <span className="gradient-text">compétences</span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-heading">
+                {t.skillsTitle.split(' ').map((word, index) => (
+                  <span key={index} className={index === 1 ? 'gradient-text' : ''}>
+                    {word}{index < t.skillsTitle.split(' ').length - 1 ? ' ' : ''}
+                  </span>
+                ))}
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Technologies et outils que j'utilise pour créer des applications modernes
+                {t.skillsDescription}
               </p>
             </motion.div>
 
@@ -1043,7 +1189,7 @@ function App() {
                         className="space-y-2"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900 dark:text-white">
+                          <span className="font-medium text-gray-900 dark:text-white font-code">
                             {skill.name}
                           </span>
                           <span className={`text-sm font-medium px-3 py-1 rounded-full ${
@@ -1074,11 +1220,15 @@ function App() {
               viewport={{ once: true }}
               className="text-center mb-16 section-header"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Me <span className="gradient-text">contacter</span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-heading">
+                {t.contactTitle.split(' ').map((word, index) => (
+                  <span key={index} className={index === 1 ? 'gradient-text' : ''}>
+                    {word}{index < t.contactTitle.split(' ').length - 1 ? ' ' : ''}
+                  </span>
+                ))}
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Discutons de vos projets et opportunités de collaboration
+                {t.contactSubtitle}
               </p>
             </motion.div>
 
@@ -1095,8 +1245,8 @@ function App() {
                   {/* Section Informations de contact */}
                   <div className="mb-8 mt-6 p-8">
                     <div style={{height: '30px'}}></div>
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6" style={{paddingLeft: '20px'}}>
-                      Informations de contact
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 font-heading" style={{paddingLeft: '20px'}}>
+                      {t.contactInfo}
                     </h3>
                   </div>
                   
@@ -1106,11 +1256,13 @@ function App() {
                   <div className="space-y-4 p-8">
                       {[
                         { icon: <Mail className="w-8 h-8" />, title: "Email", value: "mathias.neri@ynov.com", link: "mailto:mathias.neri@ynov.com" },
-                        { icon: <MapPin className="w-8 h-8" />, title: "Localisation", value: "Aix-en-Provence, France", link: "#" }
+                        { icon: <MapPin className="w-8 h-8" />, title: "Localisation", value: "Aix-en-Provence, France", link: "https://www.google.com/maps/place/Aix-en-Provence,+France" }
                       ].map((info, index) => (
                         <motion.a
                           key={index}
                           href={info.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
@@ -1137,8 +1289,8 @@ function App() {
                   {/* Section Réseaux sociaux */}
                   <div className="p-8">
                     <div className="mb-6">
-                      <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                        Réseaux sociaux
+                      <h3 className="text-2xl font-semibold text-gray-900 dark:text-white font-heading">
+                        {t.socialNetworks}
                       </h3>
                     </div>
                     
@@ -1186,8 +1338,8 @@ function App() {
                   {/* Section Titre du formulaire */}
                   <div className="mb-6 p-8">
                     <div style={{height: '30px'}}></div>
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-12" style={{paddingLeft: '20px'}}>
-                      Envoyez-moi un message
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-12 font-heading" style={{paddingLeft: '20px'}}>
+                      {t.sendMessage}
                     </h3>
                     
 
@@ -1200,7 +1352,7 @@ function App() {
                   <form onSubmit={handleSubmit} className="space-y-6 mt-8 p-8">
                   <div style={{padding: '20px'}}>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Nom complet
+                      {t.name}
                     </label>
                     <input
                       type="text"
@@ -1210,13 +1362,13 @@ function App() {
                       onChange={handleInputChange}
                       required
                       className="input-variety"
-                      placeholder="Votre nom"
+                      placeholder={t.namePlaceholder}
                     />
                   </div>
 
                   <div style={{padding: '20px'}}>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Email
+                      {t.email}
                     </label>
                     <input
                       type="email"
@@ -1226,13 +1378,13 @@ function App() {
                       onChange={handleInputChange}
                       required
                       className="input-variety"
-                      placeholder="votre.email@example.com"
+                      placeholder={t.emailPlaceholder}
                     />
                   </div>
 
                   <div style={{padding: '20px'}}>
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Message
+                      {t.message}
                     </label>
                     <textarea
                       id="message"
@@ -1242,7 +1394,7 @@ function App() {
                       required
                       rows={5}
                       className="input-variety resize-none"
-                      placeholder="Votre message..."
+                      placeholder={t.messagePlaceholder}
                     />
                   </div>
 
@@ -1257,12 +1409,12 @@ function App() {
                     {isSubmitting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Envoi en cours...</span>
+                        <span>{t.sending}</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-5 h-5" />
-                        <span>Envoyer le message</span>
+                        <span>{t.send}</span>
                       </>
                     )}
                   </motion.button>
@@ -1278,17 +1430,17 @@ function App() {
       <footer className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h3 className="text-2xl font-bold gradient-text mb-2">
+            <h3 className="text-2xl font-bold gradient-text mb-2 font-heading">
               Mathias Neri
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Étudiant en cybersécurité
+              {language === 'fr' ? 'Étudiant en cybersécurité' : 'Cybersecurity Student'}
             </p>
             <p className="text-gray-500 dark:text-gray-500 text-sm">
-              © {new Date().getFullYear()} Mathias Neri. Tous droits réservés.
+              © {new Date().getFullYear()} Mathias Neri. {t.allRightsReserved}.
             </p>
             <p className="text-gray-500 dark:text-gray-500 text-xs mt-2">
-              Portfolio créé avec React, Tailwind CSS et Framer Motion
+              {t.portfolioCreated}
             </p>
           </div>
         </div>
